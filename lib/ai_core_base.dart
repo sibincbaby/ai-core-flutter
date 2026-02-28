@@ -22,6 +22,7 @@ export 'ai_provider_registry.dart';
 export 'conversation_manager.dart';
 
 // Core contracts
+export 'core/ai_key_pool.dart';
 export 'core/ai_provider_adapter.dart';
 export 'core/capability_validator.dart';
 export 'core/middleware.dart';

@@ -57,12 +57,14 @@ After fetching docs, briefly note what was checked and what changed. This avoids
 - **3-tier capability resolution** — `_resolveCapabilities` in OpenAI/Gemini adapters: exact match → longest-prefix match → family inference. Unknown future models automatically get reasonable defaults.
 - **Exclusion-based fetchModels** — OpenAI `fetchModels` uses an exclusion filter (blocks embeddings, DALL-E, TTS, etc.) so new model families are included by default.
 - **Family pricing inference** — `AICostCalculator.getPricing` falls back to median pricing from the same model family for unknown models (e.g. `gpt-6-turbo` gets median of all `gpt-*` pricing).
+- **Multi-key pools (explicit, no rotation)** — `AIKeyPool` holds labeled keys per provider. Keys are resolved via `request.keyTag` or `pool.defaultLabel`. **No automatic rotation** — the user controls which key is used. Each adapter calls `_resolveKeyOptions()` to override the Authorization header and `_recordKeyUsage()` to track tokens per key.
 
 ### 2.2 Key Files
 
 | Purpose | File |
 |---------|------|
 | Abstract adapter contract | `lib/core/ai_provider_adapter.dart` |
+| Key pool (multi-key) | `lib/core/ai_key_pool.dart` |
 | OpenAI adapter | `lib/adapters/openai_adapter.dart` |
 | Gemini adapter | `lib/adapters/gemini_adapter.dart` |
 | OpenRouter adapter | `lib/adapters/openrouter_adapter.dart` |
@@ -230,4 +232,4 @@ When starting a new development session on this project:
 
 ---
 
-*Last updated: 2026-02-28 (v0.1.3)*
+*Last updated: 2026-02-28 (v0.1.4)*

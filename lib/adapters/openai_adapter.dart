@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../core/ai_key_pool.dart';
 import '../core/ai_provider_adapter.dart';
 import '../core/retry_interceptor.dart';
 import '../models/ai_embedding.dart';
@@ -161,6 +162,37 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
   @override
   String get providerId => config.id;
 
+  /// Resolves the Authorization header value for a request.
+  ///
+  /// If a [AIKeyPool] is configured, selects the key matching [keyTag]
+  /// (or the default key). Otherwise uses [config.apiKey].
+  Options _resolveKeyOptions(String? keyTag, {ResponseType? responseType}) {
+    final pool = config.keyPool;
+    if (pool != null) {
+      final key = pool.resolve(label: keyTag);
+      return Options(
+        headers: {'Authorization': 'Bearer $key'},
+        responseType: responseType,
+      );
+    }
+    if (responseType != null) {
+      return Options(responseType: responseType);
+    }
+    return Options();
+  }
+
+  /// Records token usage against the key pool entry (if configured).
+  void _recordKeyUsage(String? keyTag, AIResponse response) {
+    final pool = config.keyPool;
+    if (pool == null) return;
+    final label = keyTag ?? pool.defaultLabel;
+    pool.recordUsage(
+      label,
+      inputTokens: response.usage?.promptTokens ?? 0,
+      outputTokens: response.usage?.completionTokens ?? 0,
+    );
+  }
+
   @override
   Future<AIResponse> generate(AIRequest request) async {
     try {
@@ -168,8 +200,11 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
       final response = await _dio.post<Map<String, dynamic>>(
         '/v1/chat/completions',
         data: body,
+        options: _resolveKeyOptions(request.keyTag),
       );
-      return parseOpenAIResponse(response.data!);
+      final aiResponse = parseOpenAIResponse(response.data!);
+      _recordKeyUsage(request.keyTag, aiResponse);
+      return aiResponse;
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -182,7 +217,10 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
       final response = await _dio.post<ResponseBody>(
         '/v1/chat/completions',
         data: body,
-        options: Options(responseType: ResponseType.stream),
+        options: _resolveKeyOptions(
+          request.keyTag,
+          responseType: ResponseType.stream,
+        ),
       );
 
       yield* parseOpenAIStream(response.data!.stream);
@@ -203,6 +241,7 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
       final response = await _dio.post<Map<String, dynamic>>(
         '/v1/embeddings',
         data: body,
+        options: _resolveKeyOptions(null),
       );
 
       final data = response.data!;

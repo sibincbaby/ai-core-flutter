@@ -1,3 +1,14 @@
+## 0.1.4
+
+### Added
+- **Multi-Key Management** — `AIKeyPool` allows multiple labeled API keys per provider with explicit selection and per-key usage tracking
+  - `AIKeyEntry(key, label:)` — labeled key entry
+  - `AIKeyPool(entries:, defaultLabel:)` — key store with `resolve()`, `recordUsage()`, `usageFor()`, `resetUsage()`
+  - `AIProviderConfig.keyPool` — optional key pool attachment
+  - `AIRequest.keyTag` — explicit key selection per request
+  - All three adapters (OpenAI, Gemini, OpenRouter) resolve keys from pool and track usage automatically
+  - **No automatic rotation** — keys are selected explicitly via `keyTag` or the manually-set `defaultLabel`
+
 ## 0.1.3
 
 ### Improved

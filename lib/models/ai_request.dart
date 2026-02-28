@@ -34,6 +34,22 @@ class AIRequest {
   /// Provider-specific extra parameters (passed through as-is).
   final Map<String, dynamic>? extra;
 
+  /// Optional key pool label to select a specific API key for this request.
+  ///
+  /// Only effective when the provider is configured with an [AIKeyPool].
+  /// If set, the pool resolves the key matching this label. If no match
+  /// is found, the pool's default key is used.
+  ///
+  /// ```dart
+  /// // Route expensive calls to the premium key
+  /// final response = await client.generate(AIRequest(
+  ///   model: 'gpt-4.1',
+  ///   messages: [AIMessage.user('Deep analysis…')],
+  ///   keyTag: 'premium',
+  /// ));
+  /// ```
+  final String? keyTag;
+
   const AIRequest({
     required this.messages,
     required this.model,
@@ -45,6 +61,7 @@ class AIRequest {
     this.toolChoice,
     this.responseFormat,
     this.extra,
+    this.keyTag,
   });
 
   /// Creates a copy with overridden fields.
@@ -59,6 +76,7 @@ class AIRequest {
     AIToolChoice? toolChoice,
     AIResponseFormat? responseFormat,
     Map<String, dynamic>? extra,
+    String? keyTag,
   }) => AIRequest(
     messages: messages ?? this.messages,
     model: model ?? this.model,
@@ -70,5 +88,6 @@ class AIRequest {
     toolChoice: toolChoice ?? this.toolChoice,
     responseFormat: responseFormat ?? this.responseFormat,
     extra: extra ?? this.extra,
+    keyTag: keyTag ?? this.keyTag,
   );
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
+import '../core/ai_key_pool.dart';
 import '../core/ai_provider_adapter.dart';
 import '../core/retry_interceptor.dart';
 import '../errors/ai_exception.dart';
@@ -128,6 +129,37 @@ class GeminiAdapter implements AIProviderAdapter {
 
   @override
   String get providerId => config.id;
+
+  /// Resolves the API key header for a request.
+  ///
+  /// If a [AIKeyPool] is configured, selects the key matching [keyTag]
+  /// (or the default key). Otherwise uses [config.apiKey].
+  Options _resolveKeyOptions(String? keyTag, {ResponseType? responseType}) {
+    final pool = config.keyPool;
+    if (pool != null) {
+      final key = pool.resolve(label: keyTag);
+      return Options(
+        headers: {'x-goog-api-key': key},
+        responseType: responseType,
+      );
+    }
+    if (responseType != null) {
+      return Options(responseType: responseType);
+    }
+    return Options();
+  }
+
+  /// Records token usage against the key pool entry (if configured).
+  void _recordKeyUsage(String? keyTag, AIResponse response) {
+    final pool = config.keyPool;
+    if (pool == null) return;
+    final label = keyTag ?? pool.defaultLabel;
+    pool.recordUsage(
+      label,
+      inputTokens: response.usage?.promptTokens ?? 0,
+      outputTokens: response.usage?.completionTokens ?? 0,
+    );
+  }
 
   // ── Request Building ──────────────────────────────────────────────
 
@@ -457,8 +489,11 @@ class GeminiAdapter implements AIProviderAdapter {
       final response = await _dio.post<Map<String, dynamic>>(
         '/v1beta/models/${request.model}:generateContent',
         data: body,
+        options: _resolveKeyOptions(request.keyTag),
       );
-      return _parseResponse(response.data!);
+      final aiResponse = _parseResponse(response.data!);
+      _recordKeyUsage(request.keyTag, aiResponse);
+      return aiResponse;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -472,7 +507,10 @@ class GeminiAdapter implements AIProviderAdapter {
         '/v1beta/models/${request.model}:streamGenerateContent',
         data: body,
         queryParameters: {'alt': 'sse'},
-        options: Options(responseType: ResponseType.stream),
+        options: _resolveKeyOptions(
+          request.keyTag,
+          responseType: ResponseType.stream,
+        ),
       );
 
       final byteStream = response.data!.stream;
@@ -572,6 +610,7 @@ class GeminiAdapter implements AIProviderAdapter {
       final response = await _dio.post<Map<String, dynamic>>(
         '/v1beta/models/${request.model}:batchEmbedContents',
         data: {'requests': requests},
+        options: _resolveKeyOptions(null),
       );
 
       final data = response.data!;

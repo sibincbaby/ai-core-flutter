@@ -5,6 +5,7 @@ A **provider-agnostic** Flutter/Dart SDK for interacting with multiple LLM provi
 ## Features
 
 - **Multi-provider support** — OpenAI, Google Gemini, OpenRouter out of the box
+- **Multi-key management** — Labeled API key pools with per-request selection and usage tracking
 - **Tool/function calling** — Define tools, receive tool calls, feed results back
 - **Structured output** — JSON mode and JSON Schema enforcement
 - **Streaming** — Real-time token-by-token responses via `Stream<AIStreamChunk>`
@@ -356,6 +357,54 @@ calculator.setPricing('my-fine-tune', AIModelPricing(
   inputPerMillion: 5.0,
   outputPerMillion: 15.0,
 ));
+```
+
+### Multi-Key Management
+
+Use `AIKeyPool` to configure multiple labeled API keys per provider. Keys are selected **explicitly** — no automatic rotation.
+
+```dart
+// Define labeled keys
+final pool = AIKeyPool(
+  entries: [
+    AIKeyEntry('sk-free-tier-key', label: 'free'),
+    AIKeyEntry('sk-premium-key',   label: 'premium'),
+  ],
+  defaultLabel: 'free',
+);
+
+// Attach pool to provider config
+final config = AIProviderConfig(
+  id: 'openai',
+  providerType: AIProviderType.openAI,
+  apiKey: 'sk-free-tier-key', // base key, used when no pool
+  keyPool: pool,
+);
+final adapter = OpenAIAdapter(config: config);
+
+// Use default key (free)
+await adapter.generate(
+  AIRequest(messages: [AIMessage.user('Hello')], model: 'gpt-4o'),
+);
+
+// Explicitly select a key via keyTag
+await adapter.generate(
+  AIRequest(
+    messages: [AIMessage.user('Analyze this document...')],
+    model: 'gpt-4o',
+    keyTag: 'premium', // uses sk-premium-key
+  ),
+);
+
+// Change the default key at runtime
+pool.defaultLabel = 'premium';
+
+// Check per-key usage
+final usage = pool.usageFor('free')!;
+print('${usage.callCount} calls, ${usage.totalTokens} tokens');
+
+// Reset counters
+pool.resetUsage();
 ```
 
 ### Secure Key Storage
