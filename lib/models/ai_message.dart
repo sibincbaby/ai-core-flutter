@@ -33,9 +33,28 @@ class AIMessage {
   factory AIMessage.text({required AIRole role, required String text}) =>
       AIMessage(role: role, content: [AIContentBlock.text(text)]);
 
-  /// Create a user message with a text prompt.
-  factory AIMessage.user(String text) =>
-      AIMessage.text(role: AIRole.user, text: text);
+  /// Create a user message.
+  ///
+  /// When only [text] is provided, creates a text-only message.
+  /// When [content] is provided, uses the content blocks directly
+  /// (the [text] parameter is ignored).
+  ///
+  /// ```dart
+  /// // Text-only
+  /// AIMessage.user('Hello')
+  ///
+  /// // Multimodal
+  /// AIMessage.user('Describe this', content: [
+  ///   AIContentBlock.text('What do you see?'),
+  ///   AIContentBlock.imageUrl('https://example.com/photo.jpg'),
+  /// ])
+  /// ```
+  factory AIMessage.user(String text, {List<AIContentBlock>? content}) {
+    if (content != null) {
+      return AIMessage(role: AIRole.user, content: content);
+    }
+    return AIMessage.text(role: AIRole.user, text: text);
+  }
 
   /// Create a system message.
   factory AIMessage.system(String text) =>

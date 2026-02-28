@@ -50,6 +50,18 @@ class ConversationManager {
   /// Optional default max tokens for all requests.
   final int? maxTokens;
 
+  /// Optional key pool label for all requests in this conversation.
+  ///
+  /// When set, all API calls in this conversation use the specified key
+  /// from the provider's [AIKeyPool]. See [AIRequest.keyTag].
+  final String? keyTag;
+
+  /// Optional provider-specific extra parameters for all requests.
+  ///
+  /// Useful for passing [OpenRouterOptions] or other provider-specific
+  /// settings consistently across a conversation.
+  final Map<String, dynamic>? extra;
+
   /// Whether to validate capabilities against cached models.
   final bool validateCapabilities;
 
@@ -64,6 +76,8 @@ class ConversationManager {
     this.maxToolRounds = 10,
     this.temperature,
     this.maxTokens,
+    this.keyTag,
+    this.extra,
     this.validateCapabilities = true,
   }) : _client = client {
     if (systemPrompt != null) {
@@ -144,6 +158,8 @@ class ConversationManager {
         maxTokens: maxTokens,
         tools: tools,
         toolChoice: toolChoice,
+        keyTag: keyTag,
+        extra: extra,
       );
 
       final response = await _client.generate(
@@ -185,6 +201,8 @@ class ConversationManager {
       model: model,
       temperature: temperature,
       maxTokens: maxTokens,
+      keyTag: keyTag,
+      extra: extra,
       // Don't offer tools on the final round to force a text response.
     );
 

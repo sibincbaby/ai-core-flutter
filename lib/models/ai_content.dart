@@ -31,9 +31,15 @@ final class TextContent extends AIContentData {
 /// Image referenced by URL.
 final class ImageUrlContent extends AIContentData {
   final String url;
+
+  /// OpenAI detail level (`'auto'`, `'high'`, `'low'`).
   final String? detail;
 
-  const ImageUrlContent(this.url, {this.detail});
+  /// Explicit MIME type (e.g. `'image/png'`). Used by Gemini; OpenAI infers
+  /// the type from the URL.
+  final String? mimeType;
+
+  const ImageUrlContent(this.url, {this.detail, this.mimeType});
 
   @override
   AIContentType get type => AIContentType.imageUrl;
@@ -65,7 +71,11 @@ final class AudioBytesContent extends AIContentData {
 final class VideoUrlContent extends AIContentData {
   final String url;
 
-  const VideoUrlContent(this.url);
+  /// Explicit MIME type (e.g. `'video/mp4'`). Used by Gemini; OpenAI infers
+  /// the type from the URL.
+  final String? mimeType;
+
+  const VideoUrlContent(this.url, {this.mimeType});
 
   @override
   AIContentType get type => AIContentType.videoUrl;
@@ -95,8 +105,15 @@ class AIContentBlock {
   factory AIContentBlock.text(String text) => AIContentBlock(TextContent(text));
 
   /// Create an image URL content block.
-  factory AIContentBlock.imageUrl(String url, {String? detail}) =>
-      AIContentBlock(ImageUrlContent(url, detail: detail));
+  ///
+  /// [detail] is used by OpenAI (`'auto'`, `'high'`, `'low'`).
+  /// [mimeType] is used by Gemini (e.g. `'image/png'`); if omitted,
+  /// the adapter falls back to `'image/jpeg'`.
+  factory AIContentBlock.imageUrl(
+    String url, {
+    String? detail,
+    String? mimeType,
+  }) => AIContentBlock(ImageUrlContent(url, detail: detail, mimeType: mimeType));
 
   /// Create an image bytes content block.
   factory AIContentBlock.imageBytes(
@@ -111,8 +128,11 @@ class AIContentBlock {
   }) => AIContentBlock(AudioBytesContent(bytes, mimeType: mimeType));
 
   /// Create a video URL content block.
-  factory AIContentBlock.videoUrl(String url) =>
-      AIContentBlock(VideoUrlContent(url));
+  ///
+  /// [mimeType] is used by Gemini (e.g. `'video/mp4'`); if omitted,
+  /// the adapter falls back to `'video/mp4'`.
+  factory AIContentBlock.videoUrl(String url, {String? mimeType}) =>
+      AIContentBlock(VideoUrlContent(url, mimeType: mimeType));
 
   /// Create a video bytes content block.
   factory AIContentBlock.videoBytes(

@@ -300,6 +300,7 @@ class AICostCalculator {
     ),
 
     // ── OpenAI o-series ──────────────────────────────────────
+    'o3-pro': AIModelPricing(inputPerMillion: 150.0, outputPerMillion: 600.0),
     'o3': AIModelPricing(inputPerMillion: 2.0, outputPerMillion: 8.0),
     'o3-mini': AIModelPricing(inputPerMillion: 1.10, outputPerMillion: 4.40),
     'o4-mini': AIModelPricing(inputPerMillion: 1.10, outputPerMillion: 4.40),

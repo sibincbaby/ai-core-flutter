@@ -1,3 +1,17 @@
+## 0.1.5
+
+### Improved
+- **`AIMessage.user`** — Now accepts optional `content:` parameter for multimodal messages
+- **`AIContentBlock.videoUrl`** — Accepts optional `mimeType:` (Gemini uses it instead of hardcoding `video/mp4`)
+- **`AIContentBlock.imageUrl`** — Accepts optional `mimeType:` (Gemini uses it instead of hardcoding `image/jpeg`)
+- **`MiddlewarePipeline`** — Constructor now accepts optional initial `middlewares` list
+- **`ConversationManager`** — Added `keyTag` and `extra` fields, passed through to every request in the conversation
+- **Pricing** — Added `o3-pro` pricing ($150/$600 per M tokens)
+
+### Fixed
+- Broken syntax in `test/manual/test_providers.dart`
+- Unused and unnecessary imports in tests and adapter files
+
 ## 0.1.4
 
 ### Added

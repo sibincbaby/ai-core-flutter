@@ -16,7 +16,7 @@ void main() {
   final openrouterKey = env['OPENROUTER_API_KEY'] ?? '';
 
   // ── OpenAI ────────────────────────────────────────────────────
-  .('OpenAI', () {
+  group('OpenAI', () {
     late AIClient client;
 
     setUp(() {

@@ -50,7 +50,7 @@ After fetching docs, briefly note what was checked and what changed. This avoids
 ### 2.1 Core Patterns
 
 - **`implements` not `extends`** — All adapters use `implements AIProviderAdapter`. Every abstract method must be explicitly implemented in every adapter AND test mock.
-- **Sealed `AIContentData`** — Content types are a sealed class. Adding a new subclass requires exhaustive switch updates everywhere.
+- **Sealed `AIContentData`** — Content types are a sealed class. Adding a new subclass requires exhaustive switch updates everywhere. `ImageUrlContent` and `VideoUrlContent` have optional `mimeType` for Gemini (adapters fall back to sensible defaults).
 - **`OpenAICompatibleMixin`** — Shared request/response logic for OpenAI + OpenRouter.  Gemini has its own format.
 - **`request.extra`** — Provider-specific fields (OpenRouter options, etc.) are passed via the `extra: Map<String, dynamic>` field on `AIRequest`.
 - **Static consts, not factories** — `AIToolChoice.auto`, `AIResponseFormat.json`, `RetryConfig.conservative` are `static const`.
@@ -73,6 +73,7 @@ After fetching docs, briefly note what was checked and what changed. This avoids
 | Request model | `lib/models/ai_request.dart` |
 | Response model | `lib/models/ai_response.dart` |
 | Content types (sealed) | `lib/models/ai_content.dart` |
+| Messages | `lib/models/ai_message.dart` |
 | Cost/pricing | `lib/models/ai_cost.dart` |
 | Model capabilities | `lib/models/ai_model.dart` |
 | Provider config | `lib/models/ai_provider_config.dart` |
@@ -82,7 +83,9 @@ After fetching docs, briefly note what was checked and what changed. This avoids
 ### 2.3 Config Gotchas
 
 - `AIProviderConfig` uses `id` + `providerType` (NOT `providerId` / `defaultModel`)
-- `ConversationManager` requires `model` parameter; history via `.messages` not `.history`
+- `ConversationManager` requires `model` parameter; history via `.messages` not `.history`; supports `keyTag` and `extra` for key pool and provider-specific options
+- `AIMessage.user()` accepts optional `content:` for multimodal; when provided, the positional `text` param is ignored
+- `MiddlewarePipeline` constructor accepts optional `middlewares:` list
 - `register()` takes a single adapter argument
 
 ---
@@ -232,4 +235,4 @@ When starting a new development session on this project:
 
 ---
 
-*Last updated: 2026-02-28 (v0.1.4)*
+*Last updated: 2026-02-28 (v0.1.5)*

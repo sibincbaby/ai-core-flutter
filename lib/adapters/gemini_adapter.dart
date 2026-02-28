@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../core/ai_key_pool.dart';
 import '../core/ai_provider_adapter.dart';
 import '../core/retry_interceptor.dart';
 import '../errors/ai_exception.dart';
@@ -335,8 +334,11 @@ class GeminiAdapter implements AIProviderAdapter {
   Map<String, dynamic> _convertContentBlock(AIContentBlock block) {
     return switch (block.data) {
       TextContent(text: final text) => {'text': text},
-      ImageUrlContent(url: final url) => {
-        'fileData': {'mimeType': 'image/jpeg', 'fileUri': url},
+      ImageUrlContent(url: final url, mimeType: final mime) => {
+        'fileData': {
+          'mimeType': mime ?? 'image/jpeg',
+          'fileUri': url,
+        },
       },
       ImageBytesContent(bytes: final bytes, mimeType: final mime) => {
         'inlineData': {'mimeType': mime, 'data': base64Encode(bytes)},
@@ -344,8 +346,11 @@ class GeminiAdapter implements AIProviderAdapter {
       AudioBytesContent(bytes: final bytes, mimeType: final mime) => {
         'inlineData': {'mimeType': mime, 'data': base64Encode(bytes)},
       },
-      VideoUrlContent(url: final url) => {
-        'fileData': {'mimeType': 'video/mp4', 'fileUri': url},
+      VideoUrlContent(url: final url, mimeType: final mime) => {
+        'fileData': {
+          'mimeType': mime ?? 'video/mp4',
+          'fileUri': url,
+        },
       },
       VideoBytesContent(bytes: final bytes, mimeType: final mime) => {
         'inlineData': {'mimeType': mime, 'data': base64Encode(bytes)},

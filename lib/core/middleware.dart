@@ -47,7 +47,11 @@ abstract class AIMiddleware {
 /// Middleware is applied in order: the first middleware added is the outermost
 /// wrapper (first to receive requests, last to see responses).
 class MiddlewarePipeline {
-  final List<AIMiddleware> _middlewares = [];
+  final List<AIMiddleware> _middlewares;
+
+  /// Creates a pipeline, optionally pre-populated with [middlewares].
+  MiddlewarePipeline({List<AIMiddleware>? middlewares})
+    : _middlewares = middlewares != null ? List.of(middlewares) : [];
 
   /// The middleware list (read-only view).
   List<AIMiddleware> get middlewares => List.unmodifiable(_middlewares);
