@@ -238,11 +238,18 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
       return data
           .where((m) {
             final id = (m as Map<String, dynamic>)['id'] as String;
-            return id.startsWith('gpt-') ||
-                id.startsWith('o1') ||
-                id.startsWith('o3') ||
-                id.startsWith('o4') ||
-                id.startsWith('o5');
+            // Include chat/reasoning models, exclude embeddings/moderation/etc.
+            // This is an exclusion filter so new model families are included
+            // by default rather than silently dropped.
+            return !id.startsWith('text-embedding') &&
+                !id.startsWith('text-moderation') &&
+                !id.startsWith('dall-e') &&
+                !id.startsWith('tts-') &&
+                !id.startsWith('whisper') &&
+                !id.startsWith('davinci') &&
+                !id.startsWith('babbage') &&
+                !id.contains('instruct') &&
+                !id.startsWith('chatgpt-');
           })
           .map((m) {
             final modelMap = m as Map<String, dynamic>;
@@ -262,17 +269,51 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
   }
 
   /// Resolves capabilities for a model ID using the known models registry.
-  /// Falls back to text-only if the exact ID isn't found, but checks prefixes.
+  ///
+  /// Lookup order:
+  /// 1. Exact match in [knownModels].
+  /// 2. Prefix match (e.g. `gpt-4o-2024-08-06` → `gpt-4o`).
+  /// 3. Family inference — unknown future models inherit from their family
+  ///    (e.g. `gpt-6-turbo` inherits the modern GPT family defaults).
+  /// 4. Bare minimum text-only fallback.
   AIModelCapabilities _resolveCapabilities(String modelId) {
     // Exact match first.
     if (knownModels.containsKey(modelId)) {
       return knownModels[modelId]!;
     }
     // Try prefix match (e.g., 'gpt-4o-2024-08-06' → 'gpt-4o').
-    for (final entry in knownModels.entries) {
-      if (modelId.startsWith(entry.key)) {
-        return entry.value;
+    // Sort by key length descending so longest (most specific) prefix wins.
+    final sortedKeys = knownModels.keys.toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    for (final key in sortedKeys) {
+      if (modelId.startsWith(key)) {
+        return knownModels[key]!;
       }
+    }
+    // Family inference for unknown future models.
+    return _inferFamilyCapabilities(modelId);
+  }
+
+  /// Infers capabilities for an unknown model based on its family prefix.
+  ///
+  /// This ensures that when OpenAI releases new models (e.g. gpt-6, o5),
+  /// they get reasonable defaults without requiring a code update.
+  static AIModelCapabilities _inferFamilyCapabilities(String modelId) {
+    // Modern GPT models (gpt-X where X >= 4) support vision + tools + JSON.
+    if (modelId.startsWith('gpt-')) {
+      return const AIModelCapabilities(
+        supportsImageInput: true,
+        supportsToolCalling: true,
+        supportsJsonMode: true,
+      );
+    }
+    // o-series reasoning models support vision + tools + JSON.
+    if (RegExp(r'^o\d').hasMatch(modelId)) {
+      return const AIModelCapabilities(
+        supportsImageInput: true,
+        supportsToolCalling: true,
+        supportsJsonMode: true,
+      );
     }
     // Default: text-only with streaming.
     return const AIModelCapabilities();

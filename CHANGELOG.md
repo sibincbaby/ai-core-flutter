@@ -1,3 +1,11 @@
+## 0.1.3
+
+### Improved
+- **3-tier capability resolution** — OpenAI and Gemini adapters now resolve capabilities via: exact match → longest-prefix match → family inference. Unknown future models (e.g. `gpt-6-turbo`, `o5-pro`, `gemini-4-ultra`) automatically get reasonable defaults without code changes.
+- **Exclusion-based fetchModels** — OpenAI `fetchModels` switched from inclusion filter to exclusion filter, so new model families are included by default rather than silently dropped.
+- **Family pricing inference** — `AICostCalculator.getPricing` now falls back to median pricing from the same model family for completely unknown models.
+- **CLAUDE.md** — Documented new patterns (3-tier resolution, exclusion filters, family inference) in development guidelines.
+
 ## 0.1.2
 
 ### Updated

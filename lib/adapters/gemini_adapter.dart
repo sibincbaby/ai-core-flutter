@@ -629,14 +629,35 @@ class GeminiAdapter implements AIProviderAdapter {
     }
   }
 
+  /// Resolves capabilities for a model ID using the known models registry.
+  ///
+  /// Lookup order:
+  /// 1. Exact match in [knownModels].
+  /// 2. Prefix match (longest prefix wins).
+  /// 3. Family inference — unknown future models inherit sensible defaults
+  ///    (e.g. `gemini-4-ultra` inherits modern Gemini family capabilities).
+  /// 4. Bare minimum fallback: text + image.
   AIModelCapabilities _resolveCapabilities(String modelId) {
     if (knownModels.containsKey(modelId)) {
       return knownModels[modelId]!;
     }
-    for (final entry in knownModels.entries) {
-      if (modelId.startsWith(entry.key)) {
-        return entry.value;
+    // Prefix match — longest key first for specificity.
+    final sortedKeys = knownModels.keys.toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    for (final key in sortedKeys) {
+      if (modelId.startsWith(key)) {
+        return knownModels[key]!;
       }
+    }
+    // Family inference: all modern Gemini models support multimodal + tools.
+    if (modelId.startsWith('gemini-')) {
+      return const AIModelCapabilities(
+        supportsImageInput: true,
+        supportsAudioInput: true,
+        supportsVideoInput: true,
+        supportsToolCalling: true,
+        supportsJsonMode: true,
+      );
     }
     return const AIModelCapabilities(supportsImageInput: true);
   }

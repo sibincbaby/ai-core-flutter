@@ -54,6 +54,9 @@ After fetching docs, briefly note what was checked and what changed. This avoids
 - **`OpenAICompatibleMixin`** — Shared request/response logic for OpenAI + OpenRouter.  Gemini has its own format.
 - **`request.extra`** — Provider-specific fields (OpenRouter options, etc.) are passed via the `extra: Map<String, dynamic>` field on `AIRequest`.
 - **Static consts, not factories** — `AIToolChoice.auto`, `AIResponseFormat.json`, `RetryConfig.conservative` are `static const`.
+- **3-tier capability resolution** — `_resolveCapabilities` in OpenAI/Gemini adapters: exact match → longest-prefix match → family inference. Unknown future models automatically get reasonable defaults.
+- **Exclusion-based fetchModels** — OpenAI `fetchModels` uses an exclusion filter (blocks embeddings, DALL-E, TTS, etc.) so new model families are included by default.
+- **Family pricing inference** — `AICostCalculator.getPricing` falls back to median pricing from the same model family for unknown models (e.g. `gpt-6-turbo` gets median of all `gpt-*` pricing).
 
 ### 2.2 Key Files
 
@@ -104,11 +107,17 @@ After fetching docs, briefly note what was checked and what changed. This avoids
    - Correct model IDs (exact strings used in API calls)
    - Accurate context windows
    - Correct capability flags
-3. Update `fetchModels` filter if new model prefixes are added
-4. Update pricing in `lib/models/ai_cost.dart`
-5. Update README model tables
-6. Mark deprecated models clearly (keep them but note in comments)
-7. Test that pricing assertions still hold
+3. Update pricing in `lib/models/ai_cost.dart`
+4. Update README model tables
+5. Mark deprecated models clearly (keep them but note in comments)
+6. Test that pricing assertions still hold
+
+**Note:** Thanks to the 3-tier resolution system, you do NOT need to update code for every new model release. The system automatically handles:
+- **Dated variants** (e.g. `gpt-4o-2025-08-06`) → prefix matches `gpt-4o`
+- **Unknown models in known families** (e.g. `gpt-6-turbo`) → family inference gives vision+tools+JSON
+- **Pricing for unknown models** (e.g. `gemini-4-ultra`) → median family pricing
+
+You only need to update `knownModels` and pricing when you want **accurate** capabilities/pricing for specific models.
 
 ### 3.3 Code Quality
 
@@ -169,6 +178,8 @@ Include a body listing specific changes.
 | Not updating the README | Every feature change needs README updates |
 | Skipping `dart analyze` | Must run before every commit |
 | Hardcoding capabilities | Parse from API response where possible (e.g. OpenRouter `supported_parameters`) |
+| Adding inclusion filters for new model families | Use exclusion filters — new families are included by default |
+| Returning empty capabilities for unknown models | Use family inference — `gpt-*`, `o\d*`, `gemini-*` get sensible defaults |
 
 ---
 
@@ -181,7 +192,8 @@ Include a body listing specific changes.
 - Models API: `/v1/models`
 - Auth: `Authorization: Bearer sk-...`
 - `knownModels` map contains hardcoded capabilities (OpenAI doesn't expose `supported_parameters` in their model list)
-- Filter `fetchModels` by prefix: `gpt-`, `o1`, `o3`, `o4`, `gpt-5`
+- `fetchModels` uses **exclusion filter** — blocks embeddings/DALL-E/TTS/whisper/legacy, includes everything else by default
+- `_resolveCapabilities` uses 3-tier lookup: exact → prefix → family inference (any `gpt-*`/`o\d*` → vision+tools+JSON)
 
 ### 6.2 Google Gemini
 
@@ -190,7 +202,7 @@ Include a body listing specific changes.
 - Streaming: `/v1beta/models/{model}:streamGenerateContent?alt=sse`
 - Auth: `?key=AIza...` query parameter
 - Has native video support (unlike OpenAI)
-- `knownModels` map with hardcoded capabilities
+- `_resolveCapabilities` uses 3-tier lookup: exact → prefix → family inference (any `gemini-*` → full multimodal+tools+JSON)
 - Supports `cachedContent` for long context caching
 
 ### 6.3 OpenRouter
@@ -218,4 +230,4 @@ When starting a new development session on this project:
 
 ---
 
-*Last updated: 2026-02-28 (v0.1.2)*
+*Last updated: 2026-02-28 (v0.1.3)*

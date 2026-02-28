@@ -138,7 +138,12 @@ class AICostCalculator {
 
   /// Get the pricing entry for [modelId], or `null` if unknown.
   ///
-  /// Supports prefix matching: e.g., 'gpt-4.1-2025-04-14' matches 'gpt-4.1'.
+  /// Lookup order:
+  /// 1. Exact match.
+  /// 2. Prefix match (longest prefix wins) — e.g. `gpt-4.1-2025-04-14`
+  ///    matches `gpt-4.1`.
+  /// 3. Family inference — e.g. `gpt-6-turbo` matches the cheapest known
+  ///    entry in the `gpt-` family as a conservative estimate.
   AIModelPricing? getPricing(String modelId) {
     // Exact match first.
     if (_pricing.containsKey(modelId)) return _pricing[modelId];
@@ -152,7 +157,44 @@ class AICostCalculator {
         }
       }
     }
-    return bestKey != null ? _pricing[bestKey] : null;
+    if (bestKey != null) return _pricing[bestKey];
+
+    // Family inference: for completely unknown models in a known family,
+    // return the median pricing from that family as a rough estimate.
+    return _inferFamilyPricing(modelId);
+  }
+
+  /// Attempts to find reasonable pricing for an unknown model by matching
+  /// its family prefix against known models.
+  ///
+  /// For example, `gpt-6-turbo` would match all `gpt-` entries and return
+  /// the median pricing. Returns `null` if no family match is found.
+  AIModelPricing? _inferFamilyPricing(String modelId) {
+    // Known family prefixes to try matching against.
+    const families = ['gpt-', 'o', 'gemini-'];
+
+    for (final family in families) {
+      if (modelId.startsWith(family)) {
+        final familyPricings = _pricing.entries
+            .where((e) => e.key.startsWith(family))
+            .where(
+              (e) =>
+                  e.value.inputPerMillion > 0 || e.value.outputPerMillion > 0,
+            )
+            .map((e) => e.value)
+            .toList();
+
+        if (familyPricings.isEmpty) return null;
+
+        // Return median pricing (sorted by input cost, pick middle).
+        familyPricings.sort(
+          (a, b) => a.inputPerMillion.compareTo(b.inputPerMillion),
+        );
+        return familyPricings[familyPricings.length ~/ 2];
+      }
+    }
+
+    return null;
   }
 
   /// Estimate the cost for a generate/chat call.

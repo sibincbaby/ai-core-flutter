@@ -78,6 +78,32 @@ void main() {
       expect(calculator.getPricing('unknown-model'), isNull);
     });
 
+    test('family inference returns pricing for unknown gpt model', () {
+      final pricing = calculator.getPricing('gpt-6-turbo');
+      expect(pricing, isNotNull);
+      // Should be median of known GPT family entries.
+      expect(pricing!.inputPerMillion, greaterThan(0));
+      expect(pricing.outputPerMillion, greaterThan(0));
+    });
+
+    test('family inference returns pricing for unknown gemini model', () {
+      final pricing = calculator.getPricing('gemini-4-ultra');
+      expect(pricing, isNotNull);
+      expect(pricing!.inputPerMillion, greaterThan(0));
+      expect(pricing.outputPerMillion, greaterThan(0));
+    });
+
+    test('family inference returns pricing for unknown o-series model', () {
+      final pricing = calculator.getPricing('o5-pro');
+      expect(pricing, isNotNull);
+      expect(pricing!.inputPerMillion, greaterThan(0));
+      expect(pricing.outputPerMillion, greaterThan(0));
+    });
+
+    test('family inference returns null for non-matching family', () {
+      expect(calculator.getPricing('claude-4-opus'), isNull);
+    });
+
     test('estimate calculates correct cost', () {
       final cost = calculator.estimate(
         model: 'gpt-4.1',
