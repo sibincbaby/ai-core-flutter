@@ -1,3 +1,10 @@
+## 0.1.2
+
+### Updated
+- **OpenRouter Adapter** — Updated `X-Title` header to canonical `X-OpenRouter-Title`; `fetchModels` now parses `supported_parameters` for tool calling and JSON mode; added `capabilitiesFor()` with cached lookups
+- **OpenRouterOptions** — New typed helper class for OpenRouter-specific features: provider routing (`ProviderPreferences`), model fallbacks, plugins (`OpenRouterPlugin.web()`, `.responseHealing()`, `.fileParser()`), transforms, and user identification
+- **README** — Added OpenRouter-specific features section with provider routing, model fallbacks, plugins, and auto-router examples
+
 ## 0.1.1
 
 ### Updated

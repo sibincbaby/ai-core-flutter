@@ -39,6 +39,7 @@ export 'models/ai_model.dart';
 export 'models/ai_provider_config.dart';
 export 'models/ai_response_format.dart';
 export 'models/ai_tool.dart';
+export 'models/openrouter_options.dart';
 
 // Errors
 export 'errors/ai_exception.dart';

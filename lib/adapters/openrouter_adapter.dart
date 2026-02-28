@@ -15,6 +15,25 @@ import 'openai_compatible_mixin.dart';
 /// OpenRouter is wire-compatible with the OpenAI Chat Completions API,
 /// so this adapter uses [OpenAICompatibleMixin] for request/response logic
 /// and only overrides model fetching (which returns richer metadata).
+///
+/// ### OpenRouter-specific features
+///
+/// Use [OpenRouterOptions] (via [AIRequest.extra]) to access provider
+/// routing, model fallbacks, plugins, and more. See
+/// `lib/models/openrouter_options.dart` for full documentation.
+///
+/// ```dart
+/// import 'package:ai_core/ai_core.dart';
+///
+/// final response = await client.generate(AIRequest(
+///   model: 'openai/gpt-5.1',
+///   messages: [AIMessage.user('Hello')],
+///   extra: OpenRouterOptions(
+///     providerPreferences: ProviderPreferences(sort: 'throughput'),
+///     plugins: [OpenRouterPlugin.web()],
+///   ).toMap(),
+/// ));
+/// ```
 class OpenRouterAdapter
     with OpenAICompatibleMixin
     implements AIProviderAdapter {
@@ -26,11 +45,20 @@ class OpenRouterAdapter
   /// Optional retry configuration for automatic retry with backoff.
   final RetryConfig? retryConfig;
 
-  /// Optional site URL for OpenRouter ranking headers.
+  /// Optional site URL for OpenRouter ranking / app attribution headers.
+  ///
+  /// Sent as the `HTTP-Referer` header so your app appears on the OpenRouter
+  /// leaderboard.
   final String? siteUrl;
 
-  /// Optional app name for OpenRouter ranking headers.
+  /// Optional app name for OpenRouter ranking / app attribution headers.
+  ///
+  /// Sent as the `X-OpenRouter-Title` header.
   final String? appName;
+
+  /// Cached model capabilities from the last [fetchModels] call, keyed by
+  /// model ID.
+  final Map<String, AIModelCapabilities> _capabilitiesCache = {};
 
   OpenRouterAdapter({
     required this.config,
@@ -48,7 +76,7 @@ class OpenRouterAdapter
       'Authorization': 'Bearer ${config.apiKey}',
       'Content-Type': 'application/json',
       if (siteUrl != null) 'HTTP-Referer': siteUrl!,
-      if (appName != null) 'X-Title': appName!,
+      if (appName != null) 'X-OpenRouter-Title': appName!,
       ...?config.extraHeaders,
     };
     _dio.options.connectTimeout = const Duration(seconds: 30);
@@ -105,7 +133,9 @@ class OpenRouterAdapter
       final response = await _dio.get<Map<String, dynamic>>('/v1/models');
       final data = response.data!['data'] as List<dynamic>;
 
-      return data.map((m) {
+      final models = <AIModel>[];
+
+      for (final m in data) {
         final modelMap = m as Map<String, dynamic>;
         final id = modelMap['id'] as String;
         final name = modelMap['name'] as String? ?? id;
@@ -117,23 +147,55 @@ class OpenRouterAdapter
                 ?.cast<String>() ??
             ['text'];
 
+        // Parse supported_parameters for tool calling, JSON mode, etc.
+        final supportedParams =
+            (modelMap['supported_parameters'] as List<dynamic>?)
+                ?.cast<String>() ??
+            [];
+
         final capabilities = AIModelCapabilities(
           supportsText: inputModalities.contains('text'),
           supportsImageInput: inputModalities.contains('image'),
           supportsAudioInput: inputModalities.contains('audio'),
+          supportsVideoInput: inputModalities.contains('video'),
+          supportsToolCalling: supportedParams.contains('tools'),
+          supportsJsonMode:
+              supportedParams.contains('structured_outputs') ||
+              supportedParams.contains('response_format'),
+          maxContextWindow: modelMap['context_length'] as int?,
         );
 
-        return AIModel(
-          id: id,
-          providerId: providerId,
-          displayName: name,
-          capabilities: capabilities,
-          contextWindow: modelMap['context_length'] as int?,
+        // Cache for capabilitiesFor lookups.
+        _capabilitiesCache[id] = capabilities;
+
+        models.add(
+          AIModel(
+            id: id,
+            providerId: providerId,
+            displayName: name,
+            capabilities: capabilities,
+            contextWindow: modelMap['context_length'] as int?,
+          ),
         );
-      }).toList();
+      }
+
+      return models;
     } on DioException catch (e) {
       throw handleDioError(e);
     }
+  }
+
+  /// Returns cached capabilities for [modelId].
+  ///
+  /// Results are populated by [fetchModels]. Returns default capabilities
+  /// (text-only, streaming) if the model hasn't been fetched yet.
+  AIModelCapabilities capabilitiesFor(String modelId) {
+    // Return cached capabilities if available (populated by fetchModels).
+    final cached = _capabilitiesCache[modelId];
+    if (cached != null) return cached;
+
+    // Fallback: assume text-only with streaming support.
+    return const AIModelCapabilities();
   }
 
   @override

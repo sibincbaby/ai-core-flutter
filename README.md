@@ -281,6 +281,52 @@ final aggressive = OpenAIAdapter(
 );
 ```
 
+### OpenRouter-Specific Features
+
+Use `OpenRouterOptions` to access provider routing, model fallbacks, plugins, and more — all type-safe:
+
+```dart
+// Provider routing: prioritize throughput, deny data-collecting providers
+final response = await client.generate(AIRequest(
+  model: 'openai/gpt-5.1',
+  messages: [AIMessage.user('Hello')],
+  extra: OpenRouterOptions(
+    providerPreferences: ProviderPreferences(
+      sort: 'throughput',
+      dataCollection: 'deny',
+    ),
+  ).toMap(),
+));
+
+// Model fallbacks: try multiple models in order
+final response2 = await client.generate(AIRequest(
+  model: 'openai/gpt-5.1',
+  messages: [AIMessage.user('Hello')],
+  extra: OpenRouterOptions(
+    models: ['openai/gpt-5.1', 'anthropic/claude-sonnet-4.5'],
+    route: 'fallback',
+  ).toMap(),
+));
+
+// Plugins: web search + response healing
+final response3 = await client.generate(AIRequest(
+  model: 'openai/gpt-5.1',
+  messages: [AIMessage.user('Latest AI news?')],
+  extra: OpenRouterOptions(
+    plugins: [
+      OpenRouterPlugin.web(maxResults: 5),
+      OpenRouterPlugin.responseHealing(),
+    ],
+  ).toMap(),
+));
+
+// Auto Router: let OpenRouter pick the best model
+final response4 = await client.generate(AIRequest(
+  model: 'openrouter/auto',
+  messages: [AIMessage.user('Explain quantum entanglement')],
+));
+```
+
 ### Cost Tracking
 
 ```dart
@@ -395,7 +441,7 @@ import 'package:ai_core/ai_core_base.dart';
 | gemini-2.5-flash-lite | ✓ | ✓ | ✓ | ✓ | 1M |
 
 ### OpenRouter
-Any model available on OpenRouter — capabilities are fetched dynamically via the API.
+Any model available on OpenRouter — capabilities (tool calling, JSON mode, vision, etc.) are fetched dynamically via the `/v1/models` API and cached for `capabilitiesFor()` lookups. Use `openrouter/auto` for automatic model selection.
 
 ## Adding a Custom Adapter
 
