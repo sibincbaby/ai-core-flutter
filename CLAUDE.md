@@ -185,6 +185,51 @@ Include a body listing specific changes.
 | Hardcoding capabilities | Parse from API response where possible (e.g. OpenRouter `supported_parameters`) |
 | Adding inclusion filters for new model families | Use exclusion filters — new families are included by default |
 | Returning empty capabilities for unknown models | Use family inference — `gpt-*`, `o\d*`, `gemini-*` get sensible defaults |
+| Using default Dio without NativeAdapter on mobile | Always inject `NativeAdapter()` into Dio for Android/iOS (see Section 5.1) |
+
+### 5.1 Critical: Native HTTP Adapter for Mobile Apps
+
+**Any Flutter app using this SDK on Android/iOS MUST use `native_dio_adapter`.**
+
+Dart's default HTTP stack (`dart:io`) uses libc's `getaddrinfo()` for DNS, which **does not go through Android's `ConnectivityManager`**. This causes DNS resolution failures on many real-world devices — especially with ISP-provided DNS servers, corporate networks, VPNs, and captive portals. The OS can resolve DNS fine, but Dart can't.
+
+**All three adapters accept an optional `Dio? dio` parameter.** Apps should inject a Dio instance with `NativeAdapter()`:
+
+```dart
+import 'package:dio/dio.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
+
+Dio createNativeDio() {
+  final dio = Dio();
+  dio.httpClientAdapter = NativeAdapter();
+  return dio;
+}
+
+// Pass to every adapter constructor:
+final adapter = GeminiAdapter(
+  config: config,
+  dio: createNativeDio(),  // Uses Cronet on Android, NSURLSession on iOS
+);
+```
+
+**Why this matters:**
+
+| Aspect | `dart:io` (default) | `NativeAdapter` (Cronet/NSURLSession) |
+|--------|--------------------|-----------------------------------------|
+| DNS resolution | libc `getaddrinfo()` — bypasses Android network stack | OS-native resolver — works with all network configs |
+| HTTP/3 (QUIC) | Not supported | Supported |
+| VPN/proxy | May not respect system settings | Fully honors system VPN and proxy |
+| Private DNS (DoT/DoH) | Broken on many devices | Works correctly |
+| Certificate handling | Dart-managed | Uses OS certificate store |
+
+**Dependencies required in the consuming app:**
+```yaml
+dependencies:
+  dio: ^5.0.0
+  native_dio_adapter: ^1.5.0
+```
+
+**This is the #1 cause of "network works in browser but not in app" bugs.** Always use native adapters for production mobile apps.
 
 ---
 
@@ -235,4 +280,4 @@ When starting a new development session on this project:
 
 ---
 
-*Last updated: 2026-02-28 (v0.1.5)*
+*Last updated: 2026-02-28 (v0.1.5) — Added Section 5.1: Native HTTP Adapter guidance*
