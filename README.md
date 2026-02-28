@@ -372,19 +372,27 @@ import 'package:ai_core/ai_core_base.dart';
 ### OpenAI
 | Model | Tool Calling | JSON Mode | Vision | Context Window |
 |-------|:---:|:---:|:---:|---:|
+| gpt-5.2 | ✓ | ✓ | ✓ | 400K |
+| gpt-5.1 | ✓ | ✓ | ✓ | 400K |
+| gpt-5 | ✓ | ✓ | ✓ | 400K |
+| gpt-5-mini | ✓ | ✓ | ✓ | 400K |
+| gpt-5-nano | ✓ | ✓ | ✓ | 400K |
 | gpt-4.1 | ✓ | ✓ | ✓ | 1M |
 | gpt-4.1-mini | ✓ | ✓ | ✓ | 1M |
 | gpt-4.1-nano | ✓ | ✓ | ✓ | 1M |
 | gpt-4o | ✓ | ✓ | ✓ | 128K |
-| o3 | ✓ | ✓ | ✓ | 200K |
 | o4-mini | ✓ | ✓ | ✓ | 200K |
+| o3-pro | ✓ | ✓ | ✓ | 200K |
+| o3 | ✓ | ✓ | ✓ | 200K |
 
 ### Google Gemini
 | Model | Tool Calling | JSON Mode | Vision | Video | Context Window |
 |-------|:---:|:---:|:---:|:---:|---:|
+| gemini-3.1-pro-preview | ✓ | ✓ | ✓ | ✓ | 1M |
+| gemini-3-flash-preview | ✓ | ✓ | ✓ | ✓ | 1M |
 | gemini-2.5-pro | ✓ | ✓ | ✓ | ✓ | 1M |
 | gemini-2.5-flash | ✓ | ✓ | ✓ | ✓ | 1M |
-| gemini-2.0-flash | ✓ | ✓ | ✓ | ✓ | 1M |
+| gemini-2.5-flash-lite | ✓ | ✓ | ✓ | ✓ | 1M |
 
 ### OpenRouter
 Any model available on OpenRouter — capabilities are fetched dynamically via the API.

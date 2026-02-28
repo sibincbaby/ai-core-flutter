@@ -22,7 +22,39 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
 
   /// Known OpenAI models with their capabilities (fallback registry).
   static const Map<String, AIModelCapabilities> knownModels = {
-    // ── GPT-4.1 family (2025) ─────────────────────────────────
+    // ── GPT-5 family (2025–2026) ─────────────────────────────
+    'gpt-5.2': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 400000,
+    ),
+    'gpt-5.1': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 400000,
+    ),
+    'gpt-5': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 400000,
+    ),
+    'gpt-5-mini': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 400000,
+    ),
+    'gpt-5-nano': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 400000,
+    ),
+
+    // ── GPT-4.1 family ───────────────────────────────────────
     'gpt-4.1': AIModelCapabilities(
       supportsImageInput: true,
       supportsAudioInput: true,
@@ -66,6 +98,12 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
       supportsJsonMode: true,
       maxContextWindow: 200000,
     ),
+    'o3-pro': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 200000,
+    ),
     'o3': AIModelCapabilities(
       supportsImageInput: true,
       supportsToolCalling: true,
@@ -77,13 +115,12 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
       supportsJsonMode: true,
       maxContextWindow: 200000,
     ),
+
+    // ── Legacy / deprecated ──────────────────────────────────
     'o1': AIModelCapabilities(
       supportsImageInput: true,
       maxContextWindow: 200000,
     ),
-    'o1-mini': AIModelCapabilities(maxContextWindow: 128000),
-
-    // ── Legacy GPT-4 family ──────────────────────────────────
     'gpt-4-turbo': AIModelCapabilities(
       supportsImageInput: true,
       supportsToolCalling: true,
@@ -204,7 +241,8 @@ class OpenAIAdapter with OpenAICompatibleMixin implements AIProviderAdapter {
             return id.startsWith('gpt-') ||
                 id.startsWith('o1') ||
                 id.startsWith('o3') ||
-                id.startsWith('o4');
+                id.startsWith('o4') ||
+                id.startsWith('o5');
           })
           .map((m) {
             final modelMap = m as Map<String, dynamic>;

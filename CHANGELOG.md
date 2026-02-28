@@ -1,3 +1,11 @@
+## 0.1.1
+
+### Updated
+- **Model Catalog (Feb 2026)** — Added OpenAI GPT-5 family (gpt-5.2, gpt-5.1, gpt-5, gpt-5-mini, gpt-5-nano), o3-pro; Added Gemini 3 family (gemini-3.1-pro-preview, gemini-3-flash-preview), gemini-2.5-flash-lite, gemini-embedding-001
+- **Pricing Tables** — Updated to Feb 2026 pricing; fixed Gemini 2.5 Flash ($0.30/$2.50 including thinking tokens); added cached input pricing for GPT-5 and Gemini 3 models
+- **Deprecations** — Marked o1-mini (removed), gemini-2.0-flash/lite, gemini-1.x as legacy; OpenAI fetchModels filter now catches gpt-5 prefix
+- **README** — Updated supported model tables to reflect current landscape
+
 ## 0.1.0
 
 ### Added

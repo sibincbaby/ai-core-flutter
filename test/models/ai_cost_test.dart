@@ -157,10 +157,10 @@ void main() {
         outputTokens: 5000,
       );
       expect(cost, isNotNull);
-      // 100000 / 1M * 0.15 = 0.015
-      expect(cost!.inputCost, closeTo(0.015, 1e-10));
-      // 5000 / 1M * 0.60 = 0.003
-      expect(cost.outputCost, closeTo(0.003, 1e-10));
+      // 100000 / 1M * 0.30 = 0.030
+      expect(cost!.inputCost, closeTo(0.030, 1e-10));
+      // 5000 / 1M * 2.50 = 0.0125
+      expect(cost.outputCost, closeTo(0.0125, 1e-10));
     });
 
     test('zero tokens produces zero cost', () {

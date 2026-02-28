@@ -209,10 +209,37 @@ class AICostCalculator {
   /// All known model IDs with pricing.
   Set<String> get knownModels => _pricing.keys.toSet();
 
-  // ── Built-in pricing tables (USD per 1 M tokens, as of mid-2025) ──
+  // ── Built-in pricing tables (USD per 1 M tokens, as of Feb 2026) ───
 
   static const Map<String, AIModelPricing> _builtInPricing = {
-    // ── OpenAI ────────────────────────────────────────────────
+    // ── OpenAI GPT-5 family ──────────────────────────────────
+    'gpt-5.2': AIModelPricing(
+      inputPerMillion: 1.75,
+      outputPerMillion: 14.0,
+      cachedInputPerMillion: 0.175,
+    ),
+    'gpt-5.1': AIModelPricing(
+      inputPerMillion: 1.25,
+      outputPerMillion: 10.0,
+      cachedInputPerMillion: 0.125,
+    ),
+    'gpt-5': AIModelPricing(
+      inputPerMillion: 1.25,
+      outputPerMillion: 10.0,
+      cachedInputPerMillion: 0.125,
+    ),
+    'gpt-5-mini': AIModelPricing(
+      inputPerMillion: 0.25,
+      outputPerMillion: 2.0,
+      cachedInputPerMillion: 0.025,
+    ),
+    'gpt-5-nano': AIModelPricing(
+      inputPerMillion: 0.05,
+      outputPerMillion: 0.40,
+      cachedInputPerMillion: 0.005,
+    ),
+
+    // ── OpenAI GPT-4.1 family ────────────────────────────────
     'gpt-4.1': AIModelPricing(inputPerMillion: 2.0, outputPerMillion: 8.0),
     'gpt-4.1-mini': AIModelPricing(
       inputPerMillion: 0.40,
@@ -222,16 +249,21 @@ class AICostCalculator {
       inputPerMillion: 0.10,
       outputPerMillion: 0.40,
     ),
+
+    // ── OpenAI GPT-4o family ─────────────────────────────────
     'gpt-4o': AIModelPricing(inputPerMillion: 2.50, outputPerMillion: 10.0),
     'gpt-4o-mini': AIModelPricing(
       inputPerMillion: 0.15,
       outputPerMillion: 0.60,
     ),
+
+    // ── OpenAI o-series ──────────────────────────────────────
     'o3': AIModelPricing(inputPerMillion: 2.0, outputPerMillion: 8.0),
     'o3-mini': AIModelPricing(inputPerMillion: 1.10, outputPerMillion: 4.40),
     'o4-mini': AIModelPricing(inputPerMillion: 1.10, outputPerMillion: 4.40),
+
+    // ── OpenAI legacy ────────────────────────────────────────
     'o1': AIModelPricing(inputPerMillion: 15.0, outputPerMillion: 60.0),
-    'o1-mini': AIModelPricing(inputPerMillion: 1.10, outputPerMillion: 4.40),
     'gpt-4-turbo': AIModelPricing(
       inputPerMillion: 10.0,
       outputPerMillion: 30.0,
@@ -250,15 +282,36 @@ class AICostCalculator {
       embeddingPerMillion: 0.13,
     ),
 
-    // ── Google Gemini ────────────────────────────────────────
+    // ── Google Gemini 3 family ───────────────────────────────
+    'gemini-3.1-pro-preview': AIModelPricing(
+      inputPerMillion: 2.0,
+      outputPerMillion: 12.0,
+      cachedInputPerMillion: 0.20,
+    ),
+    'gemini-3-flash-preview': AIModelPricing(
+      inputPerMillion: 0.50,
+      outputPerMillion: 3.0,
+      cachedInputPerMillion: 0.05,
+    ),
+
+    // ── Google Gemini 2.5 family ─────────────────────────────
     'gemini-2.5-pro': AIModelPricing(
       inputPerMillion: 1.25,
       outputPerMillion: 10.0,
+      cachedInputPerMillion: 0.125,
     ),
     'gemini-2.5-flash': AIModelPricing(
-      inputPerMillion: 0.15,
-      outputPerMillion: 0.60,
+      inputPerMillion: 0.30,
+      outputPerMillion: 2.50,
+      cachedInputPerMillion: 0.03,
     ),
+    'gemini-2.5-flash-lite': AIModelPricing(
+      inputPerMillion: 0.10,
+      outputPerMillion: 0.40,
+      cachedInputPerMillion: 0.01,
+    ),
+
+    // ── Google Gemini legacy ─────────────────────────────────
     'gemini-2.0-flash': AIModelPricing(
       inputPerMillion: 0.10,
       outputPerMillion: 0.40,
@@ -277,6 +330,11 @@ class AICostCalculator {
     ),
 
     // ── Gemini Embeddings ────────────────────────────────────
+    'gemini-embedding-001': AIModelPricing(
+      inputPerMillion: 0.15,
+      outputPerMillion: 0.0,
+      embeddingPerMillion: 0.15,
+    ),
     'text-embedding-004': AIModelPricing(
       inputPerMillion: 0.0,
       outputPerMillion: 0.0,

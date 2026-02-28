@@ -27,7 +27,25 @@ class GeminiAdapter implements AIProviderAdapter {
 
   /// Known Gemini models with their capabilities (fallback registry).
   static const Map<String, AIModelCapabilities> knownModels = {
-    // ── Gemini 2.5 family (2025) ─────────────────────────────
+    // ── Gemini 3 family (2025–2026) ──────────────────────────
+    'gemini-3.1-pro-preview': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsAudioInput: true,
+      supportsVideoInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 1048576,
+    ),
+    'gemini-3-flash-preview': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsAudioInput: true,
+      supportsVideoInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 1048576,
+    ),
+
+    // ── Gemini 2.5 family ────────────────────────────────────
     'gemini-2.5-pro': AIModelCapabilities(
       supportsImageInput: true,
       supportsAudioInput: true,
@@ -44,8 +62,16 @@ class GeminiAdapter implements AIProviderAdapter {
       supportsJsonMode: true,
       maxContextWindow: 1048576,
     ),
+    'gemini-2.5-flash-lite': AIModelCapabilities(
+      supportsImageInput: true,
+      supportsAudioInput: true,
+      supportsVideoInput: true,
+      supportsToolCalling: true,
+      supportsJsonMode: true,
+      maxContextWindow: 1048576,
+    ),
 
-    // ── Gemini 2.0 family ────────────────────────────────────
+    // ── Legacy / deprecated ──────────────────────────────────
     'gemini-2.0-flash': AIModelCapabilities(
       supportsImageInput: true,
       supportsAudioInput: true,
@@ -61,8 +87,6 @@ class GeminiAdapter implements AIProviderAdapter {
       supportsJsonMode: true,
       maxContextWindow: 1048576,
     ),
-
-    // ── Gemini 1.5 family ────────────────────────────────────
     'gemini-1.5-pro': AIModelCapabilities(
       supportsImageInput: true,
       supportsAudioInput: true,
@@ -79,8 +103,6 @@ class GeminiAdapter implements AIProviderAdapter {
       supportsJsonMode: true,
       maxContextWindow: 1048576,
     ),
-
-    // ── Legacy ───────────────────────────────────────────────
     'gemini-1.0-pro': AIModelCapabilities(maxContextWindow: 32768),
   };
 
